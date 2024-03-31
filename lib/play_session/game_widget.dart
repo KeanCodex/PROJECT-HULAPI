@@ -53,7 +53,8 @@ class _GameWidgetState extends State<GameWidget> {
     }
 
     rowData = generateRows();
-    randWord = HiveHelper.randomWord(letters, box);
+    randWord = HiveHelper.randomWord(letters, box).trim();
+    print("Random Word: $randWord");
   }
 
   Widget buildBox(Letter letter, {Color textColor = Colors.black}) {
@@ -93,7 +94,7 @@ class _GameWidgetState extends State<GameWidget> {
       buffer.write(rowData[currentRowIndex][i].letter);
     }
 
-    return buffer.toString().trim();
+    return buffer.toString();
   }
 
   void updateRow() {
@@ -206,16 +207,15 @@ class _GameWidgetState extends State<GameWidget> {
                 }),
                 GestureDetector(
                   onTap: () {
-                    print(randWord);
-
+                    print("Random Word: $randWord");
                     if (currentRowIndex > 5) {
                       return;
                     }
 
                     final word = getWord().toLowerCase();
 
-                    if (!HiveHelper.isWord(word) || word == "") {
-                      print('Word: $word');
+                    if (!HiveHelper.isWord(word, box) || word == "") {
+                      print('Word: ${word.length} ${randWord.length}');
                       final dialog = AlertDialog(
                         title: const Text('Maling Salita!'),
                         content: const Text(

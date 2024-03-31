@@ -18,10 +18,18 @@ class HiveHelper {
     sevenLetterWordsBox = await Hive.openBox(sevenLetterWords);
   }
 
-  static bool isWord(String word) {
-    return fiveLetterWordsBox.values.contains(word) ||
-        sixLetterWordsBox.values.contains(word) ||
-        sevenLetterWordsBox.values.contains(word);
+  static bool isWord(String word, Box box) {
+    final listWords = box.values.toList().cast<String>();
+
+    for (var word1 in listWords) {
+      final trimmedWord = word1.trim();
+      if (trimmedWord == word) {
+        print("$word1 == $word");
+        return true;
+      }
+    }
+
+    return false;
   }
 
   static String randomWord(int length, Box box) {
