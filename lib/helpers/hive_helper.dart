@@ -24,7 +24,6 @@ class HiveHelper {
     for (var word1 in listWords) {
       final trimmedWord = word1.trim();
       if (trimmedWord == word) {
-        print("$word1 == $word");
         return true;
       }
     }

@@ -3,7 +3,9 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'package:flutter/material.dart';
+import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../game_internals/score.dart';
@@ -27,34 +29,50 @@ class WinGameScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: palette.backgroundPlaySession,
-      body: ResponsiveScreen(
-        squarishMainArea: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            gap,
-            const Center(
+      body: Stack(
+        children: [
+          Image.asset(
+            'assets/images/Background2.png',
+            fit: BoxFit.cover,
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height,
+          ),
+          ResponsiveScreen(
+            squarishMainArea: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                gap,
+                Center(
+                  child: Text(
+                    'Nanalo ka!',
+                    style: GoogleFonts.ubuntu(fontSize: 50),
+                  ),
+                ),
+                const Gap(100),
+                Center(
+                  child: Text(
+                    'Puntos:  ${score.score}\n'
+                    'Oras:  ${score.formattedTime}',
+                    style: const TextStyle(fontFamily: 'ubuntu', fontSize: 20),
+                  ),
+                ),
+              ],
+            ),
+            rectangularMenuArea: ElevatedButton(
+              onPressed: () {
+                GoRouter.of(context).go('/play');
+              },
+              style: ButtonStyle(
+                  shape: MaterialStatePropertyAll(RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10))),
+                  backgroundColor: MaterialStatePropertyAll(Colors.blueGrey)),
               child: Text(
-                'You won!',
-                style: TextStyle(fontFamily: 'Permanent Marker', fontSize: 50),
+                'Magpatuloy',
+                style: GoogleFonts.ubuntu(fontSize: 17, color: Colors.white),
               ),
             ),
-            gap,
-            Center(
-              child: Text(
-                'Score: ${score.score}\n'
-                'Time: ${score.formattedTime}',
-                style: const TextStyle(
-                    fontFamily: 'Permanent Marker', fontSize: 20),
-              ),
-            ),
-          ],
-        ),
-        rectangularMenuArea: MyButton(
-          onPressed: () {
-            GoRouter.of(context).go('/play');
-          },
-          child: const Text('Continue'),
-        ),
+          ),
+        ],
       ),
     );
   }

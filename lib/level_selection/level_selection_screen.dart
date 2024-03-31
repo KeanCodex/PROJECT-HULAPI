@@ -31,7 +31,7 @@ class LevelSelectionScreen extends StatelessWidget {
                   padding: EdgeInsets.all(16),
                   child: Center(
                     child: Text(
-                      'Select level',
+                      'Pumili ng Antas',
                       style: GoogleFonts.montserrat(fontSize: 30),
                     ),
                   ),
@@ -77,7 +77,7 @@ class LevelSelectionScreen extends StatelessWidget {
                       RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10))),
                   backgroundColor: MaterialStateProperty.all(Colors.blueGrey)),
-              child: Text('Back',
+              child: Text('Bumalik',
                   style: GoogleFonts.montserrat(
                       fontSize: 16, color: Colors.white)),
             ),

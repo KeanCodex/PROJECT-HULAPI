@@ -125,7 +125,7 @@ class _GameWidgetState extends State<GameWidget> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Padding(
-          padding: const EdgeInsets.only(top: 8.0),
+          padding: const EdgeInsets.symmetric(vertical: 30),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -137,7 +137,7 @@ class _GameWidgetState extends State<GameWidget> {
                 .toList(),
           ),
         ),
-        const Spacer(),
+        const Gap(200),
         Column(
           children: [
             Flex(
@@ -214,7 +214,24 @@ class _GameWidgetState extends State<GameWidget> {
 
                     final word = getWord().toLowerCase();
 
-                    if (!HiveHelper.isWord(word, box) || word == "") {
+                    if (word == null || word.isEmpty) {
+                      final dialog = AlertDialog(
+                        title: const Text('Walang Pinili!'),
+                        content: const Text(
+                            'Hindi ka pumili ng anumang titik. Mangyaring pumili ng titik bago magpatuloy.'),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: const Text('SIGE'),
+                          ),
+                        ],
+                      );
+                      showDialog(context: context, builder: (_) => dialog);
+
+                      return;
+                    } else if (!HiveHelper.isWord(word, box) || word == "") {
                       print('Word: ${word.length} ${randWord.length}');
                       final dialog = AlertDialog(
                         title: const Text('Maling Salita!'),
@@ -290,6 +307,7 @@ class _GameWidgetState extends State<GameWidget> {
 
     rowData[currentRowIndex][currentColIndex].letter = l;
     currentColIndex++;
+
     setState(() {});
   }
 }
