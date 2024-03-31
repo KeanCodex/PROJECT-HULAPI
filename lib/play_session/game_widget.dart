@@ -1,23 +1,46 @@
+import 'package:basic/audio/audio_controller.dart';
+import 'package:basic/audio/sounds.dart';
+import 'package:basic/game_internals/level_state.dart';
+import 'package:basic/helpers/hive_helper.dart';
+import 'package:basic/models/letter.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
 import 'package:basic/Components/NeuBox.dart';
 import 'package:gap/gap.dart';
-import '../audio/audio_controller.dart';
-import '../audio/sounds.dart';
-import '../game_internals/level_state.dart';
-import '../level_selection/levels.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:provider/provider.dart';
 
 class GameWidget extends StatefulWidget {
-  const GameWidget({Key? key}) : super(key: key);
+  const GameWidget({super.key, required this.letterCount});
+
+  final int letterCount;
 
   @override
-  _GameWidgetState createState() => _GameWidgetState();
+  State<GameWidget> createState() => _GameWidgetState();
 }
 
 class _GameWidgetState extends State<GameWidget> {
   late TextEditingController _textEditingController;
   late FocusNode _focusNode;
+
+  late String randWord;
+  bool checkWord = false;
+
+  late List<List<Letter>> rowData;
+  late Box box;
+
+  late int letters;
+
+  int currentColIndex = 0;
+  int currentRowIndex = 0;
+
+  List<List<Letter>> generateRows() {
+    return List.generate(
+        6,
+        (index) => List.generate(letters,
+            (index) => Letter(letter: "", color: const Color(0xffDBDBDB))));
+  }
 
   @override
   void initState() {
@@ -25,6 +48,18 @@ class _GameWidgetState extends State<GameWidget> {
     _textEditingController = TextEditingController();
     _focusNode = FocusNode();
     _focusNode.requestFocus();
+    letters = 4 + widget.letterCount;
+
+    if (letters == 5) {
+      box = HiveHelper.fiveLetterWordsBox;
+    } else if (letters == 6) {
+      box = HiveHelper.sixLetterWordsBox;
+    } else {
+      box = HiveHelper.sevenLetterWordsBox;
+    }
+
+    rowData = generateRows();
+    randWord = HiveHelper.randomWord(letters, box);
   }
 
   @override
@@ -34,71 +69,97 @@ class _GameWidgetState extends State<GameWidget> {
     super.dispose();
   }
 
+  Widget buildBox(Letter letter, {Color textColor = Colors.black}) {
+    final fontConfig1 = GoogleFonts.montserrat(
+        fontSize: 14, fontWeight: FontWeight.w500, color: textColor);
+
+    return Container(
+      width: 50,
+      height: 50,
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+          color: letter.color,
+          borderRadius: BorderRadius.circular(7),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.shade500,
+              blurRadius: 10,
+              offset: Offset(4, 4),
+            ),
+            BoxShadow(
+              color: Colors.white,
+              blurRadius: 15,
+              offset: Offset(-4, -4),
+            ),
+          ]),
+      child: Center(
+          child: Text(
+        letter.letter,
+        style: fontConfig1,
+      )),
+    );
+  }
+
+  String getWord() {
+    StringBuffer buffer = StringBuffer();
+    for (int i = 0; i < rowData[currentRowIndex].length; i++) {
+      buffer.write(rowData[currentRowIndex][i].letter);
+    }
+
+    return buffer.toString();
+  }
+
+  void updateRow() {
+    final word = getWord().toLowerCase();
+
+    for (int i = 0; i < word.length; i++) {
+      final index = randWord.indexOf(word[i]);
+
+      if (index == -1) {
+        rowData[currentRowIndex][i].color = Colors.grey;
+      } else if (word[i] == randWord[i]) {
+        rowData[currentRowIndex][i].color = Colors.green;
+      } else {
+        rowData[currentRowIndex][i].color = Colors.yellow;
+      }
+    }
+
+    checkWord = word == randWord;
+  }
+
   @override
   Widget build(BuildContext context) {
     final fontConfig =
         GoogleFonts.montserrat(fontSize: 13, fontWeight: FontWeight.w500);
-    final fontConfig1 =
-        GoogleFonts.montserrat(fontSize: 14, fontWeight: FontWeight.w500);
-
-    Widget _buildBox(String letter) {
-      return Container(
-        width: 50,
-        height: 50,
-        margin: EdgeInsets.all(7),
-        decoration: BoxDecoration(
-            color: Color(0xffDBDBDB),
-            borderRadius: BorderRadius.circular(7),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.shade500,
-                blurRadius: 10,
-                offset: Offset(4, 4),
-              ),
-              BoxShadow(
-                color: Colors.white,
-                blurRadius: 15,
-                offset: Offset(-4, -4),
-              ),
-            ]),
-        child: Center(
-            child: Text(
-          letter,
-          style: fontConfig1,
-        )),
-      );
-    }
+    final levelState = context.watch<LevelState>();
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Center(
+        Padding(
+          padding: const EdgeInsets.only(top: 8.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  4,
-                  (index) => _buildBox(
-                      _textEditingController.text.length > index
-                          ? _textEditingController.text[index]
-                          : ''),
-                ),
-              ),
-            ],
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: rowData
+                .map((e) => Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: e.map((e) => buildBox(e)).toList(),
+                    ))
+                .toList(),
           ),
         ),
-        const Gap(100),
+        const Spacer(),
         Column(
           children: [
-            Row(
+            Flex(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              direction: Axis.horizontal,
               children:
                   ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'].map((key) {
                 return GestureDetector(
                   onTap: () {
-                    _textEditingController.text += key;
-                    setState(() {});
+                    addLetter(key);
                   },
                   child: Neubox(
                     children: Text(key, style: fontConfig),
@@ -112,44 +173,136 @@ class _GameWidgetState extends State<GameWidget> {
                   ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'].map((key) {
                 return GestureDetector(
                   onTap: () {
-                    _textEditingController.text += key;
-                    setState(() {});
+                    addLetter(key);
+                    print(rowData[currentRowIndex]);
                   },
-                  child: Neubox(
-                    children: Text(key, style: fontConfig),
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 2),
+                    child: Neubox(
+                      children: Text(key, style: fontConfig),
+                    ),
                   ),
                 );
               }).toList(),
             ),
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [' ⌫ ', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'Enter']
-                  .map((key) {
-                return GestureDetector(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                GestureDetector(
                   onTap: () {
-                    if (key == ' ⌫ ') {
-                      if (_textEditingController.text.isNotEmpty) {
-                        _textEditingController.text =
-                            _textEditingController.text.substring(
-                                0, _textEditingController.text.length - 1);
-                        setState(() {});
-                      }
-                    } else if (key == 'Enter') {
-                      // Handle Enter key press
+                    if (currentColIndex != 0) currentColIndex--;
+                    // if (currentColIndex == letters) {
+                    //   currentColIndex = currentColIndex - 1;
+                    // }
+
+                    if (currentColIndex == 0) {
+                      rowData[currentRowIndex][currentColIndex].letter = "";
                     } else {
-                      _textEditingController.text += key;
-                      setState(() {});
+                      rowData[currentRowIndex][currentColIndex].letter = "";
+                    }
+
+                    setState(() {});
+                  },
+                  child: Neubox(
+                    children: Text(' ⌫ ', style: fontConfig),
+                  ),
+                ),
+                ...['Z', 'X', 'C', 'V', 'B', 'N', 'M'].map((key) {
+                  return GestureDetector(
+                    onTap: () {
+                      addLetter(key);
+                    },
+                    child: Neubox(
+                      children: Text(key, style: fontConfig),
+                    ),
+                  );
+                }),
+                GestureDetector(
+                  onTap: () {
+                    print(randWord);
+
+                    if (currentRowIndex > 5) {
+                      return;
+                    }
+
+                    final word = getWord().toLowerCase();
+
+                    if (!HiveHelper.isWord(word) || word == "") {
+                      print('Word: $word');
+                      final dialog = AlertDialog(
+                        title: const Text('Maling Salita!'),
+                        content: const Text(
+                            'Ang salitang ito ay hindi nasa aming listahan ng mga salita. Subukan muli!'),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: const Text('SIGE'),
+                          ),
+                        ],
+                      );
+
+                      showDialog(context: context, builder: (_) => dialog);
+
+                      return;
+                    }
+
+                    updateRow();
+
+                    currentColIndex = 0;
+                    currentRowIndex++;
+
+                    setState(() {});
+
+                    if (checkWord) {
+                      levelState.setProgress(100);
+                      context.read<AudioController>().playSfx(SfxType.wssh);
+                      levelState.evaluate();
+                    } else if (currentRowIndex == 6) {
+                      final dialog = AlertDialog(
+                        title: const Text('Maling Salita!'),
+                        content: Text('GG! Ang tamang salita ay $randWord'),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                            },
+                            child: const Text('Balik'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                              GoRouter.of(context)
+                                  .push('/play/session/${widget.letterCount}');
+                            },
+                            child: const Text('Ulitin'),
+                          ),
+                        ],
+                      );
+
+                      showDialog(context: context, builder: (_) => dialog);
                     }
                   },
                   child: Neubox(
-                    children: Text(key, style: fontConfig),
+                    children: Text('Enter', style: fontConfig),
                   ),
-                );
-              }).toList(),
+                ),
+              ],
             ),
           ],
         ),
       ],
     );
+  }
+
+  void addLetter(String l) {
+    if (currentColIndex == letters) return;
+
+    rowData[currentRowIndex][currentColIndex].letter = l;
+    currentColIndex++;
+    setState(() {});
   }
 }

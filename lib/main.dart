@@ -4,9 +4,11 @@
 
 import 'dart:developer' as dev;
 
+import 'package:basic/helpers/hive_helper.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 
@@ -16,6 +18,29 @@ import 'player_progress/player_progress.dart';
 import 'router.dart';
 import 'settings/settings.dart';
 import 'style/palette.dart';
+
+Future<List<String>> loadWordsFromFile(String filePath) async {
+  final wordData = await rootBundle.loadString('assets/words/$filePath');
+  final words = wordData.split('\n');
+  return words;
+}
+
+Future<void> initializeHive() async {
+  await HiveHelper.init();
+
+  if (HiveHelper.fiveLetterWordsBox.isEmpty &&
+      HiveHelper.sixLetterWordsBox.isEmpty &&
+      HiveHelper.sevenLetterWordsBox.isEmpty) {
+    final fiveLetterWords = await loadWordsFromFile('5_letter_words.txt');
+    await HiveHelper.fiveLetterWordsBox.addAll(fiveLetterWords);
+
+    final sixLetterWords = await loadWordsFromFile('6_letter_words.txt');
+    await HiveHelper.sixLetterWordsBox.addAll(sixLetterWords);
+
+    final sevenLetterWords = await loadWordsFromFile('7_letter_words.txt');
+    await HiveHelper.sevenLetterWordsBox.addAll(sevenLetterWords);
+  }
+}
 
 void main() async {
   // Basic logging setup.
@@ -37,6 +62,8 @@ void main() async {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
+
+  await initializeHive();
 
   runApp(MyApp());
 }

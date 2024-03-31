@@ -4,7 +4,6 @@
 
 import 'dart:async';
 
-import 'package:basic/Components/NeuBox.dart';
 import 'package:basic/play_session/steps.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
@@ -20,8 +19,6 @@ import '../game_internals/score.dart';
 import '../level_selection/levels.dart';
 import '../player_progress/player_progress.dart';
 import '../style/confetti.dart';
-import '../style/my_button.dart';
-import '../style/palette.dart';
 import 'game_widget.dart';
 
 /// This widget defines the entirety of the screen that the player sees when
@@ -109,7 +106,7 @@ class _PlaySessionScreenState extends State<PlaySessionScreen> {
           backgroundColor: Color(0xffDBDBDB),
           body: Stack(
             children: [
-              GameWidget(),
+              GameWidget(letterCount: widget.level.number),
               SizedBox.expand(
                 child: Visibility(
                   visible: _duringCelebration,
