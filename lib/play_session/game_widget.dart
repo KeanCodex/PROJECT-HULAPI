@@ -21,9 +21,6 @@ class GameWidget extends StatefulWidget {
 }
 
 class _GameWidgetState extends State<GameWidget> {
-  late TextEditingController _textEditingController;
-  late FocusNode _focusNode;
-
   late String randWord;
   bool checkWord = false;
 
@@ -45,9 +42,6 @@ class _GameWidgetState extends State<GameWidget> {
   @override
   void initState() {
     super.initState();
-    _textEditingController = TextEditingController();
-    _focusNode = FocusNode();
-    _focusNode.requestFocus();
     letters = 4 + widget.letterCount;
 
     if (letters == 5) {
@@ -60,13 +54,6 @@ class _GameWidgetState extends State<GameWidget> {
 
     rowData = generateRows();
     randWord = HiveHelper.randomWord(letters, box);
-  }
-
-  @override
-  void dispose() {
-    _textEditingController.dispose();
-    _focusNode.dispose();
-    super.dispose();
   }
 
   Widget buildBox(Letter letter, {Color textColor = Colors.black}) {
@@ -106,7 +93,7 @@ class _GameWidgetState extends State<GameWidget> {
       buffer.write(rowData[currentRowIndex][i].letter);
     }
 
-    return buffer.toString();
+    return buffer.toString().trim();
   }
 
   void updateRow() {
